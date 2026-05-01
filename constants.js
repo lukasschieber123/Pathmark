@@ -1,0 +1,9 @@
+export const WATER = "#060f24";
+export const LAND = "#15294f";
+export const BORDER = "#E0E0E0";
+export const COASTLINE = "#E0E0E0";
+export const STREET = "#4488CC";
+export const RIVER = "#2a4570";
+export const LABEL = "#c8dcee";
+export const LABEL_HALO = "#05101f";
+export const STORAGE_KEY = "travel-globe-trips";
