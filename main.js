@@ -305,6 +305,14 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+const compassBtn = document.getElementById('compass-btn');
+const compassSvg = document.getElementById('compass-svg');
+function updateCompass() {
+  compassSvg.style.transform = `rotate(${-map.getBearing()}deg)`;
+}
+map.on('rotate', updateCompass);
+compassBtn.addEventListener('click', () => map.easeTo({ bearing: 0, pitch: 0 }));
+
 function renderAll() {
   menu.renderMenu();
   pins.renderPins();
