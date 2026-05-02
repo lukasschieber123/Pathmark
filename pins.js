@@ -143,6 +143,16 @@ export function renderRouteLines() {
       }
     }
 
+    // Top up perpendicular lift only when natural great-circle curvature
+    // projects as too small to see (zoomed-in views). Direction follows the
+    // natural bulge, so the curve still tracks viewing angle.
+    //
+    // At globe zoom, the lift magnitude is also scaled by how confident we
+    // are in the natural direction. As the camera approaches a viewing angle
+    // where the great-circle projects as a straight line, naturalMag drops
+    // toward 0 and so does the boost — preventing an abrupt curve flip when
+    // panning across that angle. At zoom-in, the boost is always full so
+    // short-route arcs stay consistently visible.
     if (firstIdx >= 0 && firstIdx < lastIdx) {
       const A = screenPoints[firstIdx];
       const B = screenPoints[lastIdx];
@@ -154,22 +164,32 @@ export function renderRouteLines() {
         const perpUnitY = chordX / chordLen;
         const midIdx = Math.floor((firstIdx + lastIdx) / 2);
         const M = screenPoints[midIdx];
-        let dirSign = 0;
         if (M) {
           const cmx = (A.x + B.x) / 2;
           const cmy = (A.y + B.y) / 2;
           const naturalSigned = (M.x - cmx) * perpUnitX + (M.y - cmy) * perpUnitY;
-          dirSign = naturalSigned / Math.max(0.5, Math.abs(naturalSigned));
-        }
-        const extraLift = Math.max(25, chordLen * 0.15);
-        const span = lastIdx - firstIdx;
-        for (let j = firstIdx + 1; j < lastIdx; j++) {
-          const p = screenPoints[j];
-          if (!p) continue;
-          const t = (j - firstIdx) / span;
-          const lift = Math.sin(Math.PI * t) * extraLift * dirSign;
-          p.x += perpUnitX * lift;
-          p.y += perpUnitY * lift;
+          const naturalMag = Math.abs(naturalSigned);
+          const target = Math.max(12, chordLen * 0.07);
+          const extraNeeded = Math.max(0, target - naturalMag);
+          // Confidence in direction: 0 when natural is tiny, 1 once natural
+          // exceeds ~15px. Only applied at globe zoom where the flip
+          // happens; at zoom-in, the user doesn't cross flip angles much.
+          const confidence = isGlobe
+            ? Math.min(1, naturalMag / 15)
+            : 1;
+          const liftMag = extraNeeded * confidence;
+          if (liftMag > 0.1) {
+            const dirSign = naturalSigned / Math.max(0.5, naturalMag);
+            const span = lastIdx - firstIdx;
+            for (let j = firstIdx + 1; j < lastIdx; j++) {
+              const p = screenPoints[j];
+              if (!p) continue;
+              const t = (j - firstIdx) / span;
+              const lift = Math.sin(Math.PI * t) * liftMag * dirSign;
+              p.x += perpUnitX * lift;
+              p.y += perpUnitY * lift;
+            }
+          }
         }
       }
     }
