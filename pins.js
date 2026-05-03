@@ -5,6 +5,9 @@ let pinsEl = null;
 let routeLinesEl = null;
 let pinItems = [];
 let onPinClick = () => {};
+let movingPinId = null;
+
+export function setMovingPin(id) { movingPinId = id; renderPins(); }
 
 export function init(mapInstance, opts = {}) {
   map = mapInstance;
@@ -21,7 +24,7 @@ export function renderPins() {
   if (!trip) return;
   trip.pins.forEach((pin, i) => {
     const el = document.createElement("div");
-    el.className = "pin";
+    el.className = "pin" + (pin.id === movingPinId ? " moving" : "");
     el.innerHTML =
       '<div class="pin-stem"></div>' +
       '<div class="pin-head"><span class="pin-number">' + (i + 1) + '</span></div>';
@@ -143,16 +146,11 @@ export function renderRouteLines() {
       }
     }
 
-    // Top up perpendicular lift only when natural great-circle curvature
-    // projects as too small to see (zoomed-in views). Direction follows the
-    // natural bulge, so the curve still tracks viewing angle.
-    //
-    // At globe zoom, the lift magnitude is also scaled by how confident we
-    // are in the natural direction. As the camera approaches a viewing angle
-    // where the great-circle projects as a straight line, naturalMag drops
-    // toward 0 and so does the boost — preventing an abrupt curve flip when
-    // panning across that angle. At zoom-in, the boost is always full so
-    // short-route arcs stay consistently visible.
+    // Perpendicular arc boost: full at globe zoom, fades to zero by zoom 8.
+    // This gives a clear arc when viewing the globe and flat lines when
+    // zoomed into a region (where the great-circle is naturally straight).
+    // Using a continuous factor instead of a hard isGlobe switch prevents
+    // abrupt jumps when crossing zoom thresholds.
     if (firstIdx >= 0 && firstIdx < lastIdx) {
       const A = screenPoints[firstIdx];
       const B = screenPoints[lastIdx];
@@ -169,14 +167,13 @@ export function renderRouteLines() {
           const cmy = (A.y + B.y) / 2;
           const naturalSigned = (M.x - cmx) * perpUnitX + (M.y - cmy) * perpUnitY;
           const naturalMag = Math.abs(naturalSigned);
-          const target = Math.max(12, chordLen * 0.07);
+          // Boost fades from 1 at zoom≤4 to 0 at zoom≥8 — smooth, no snap.
+          const boostFactor = Math.max(0, Math.min(1, (8 - zoom) / 4));
+          const target = Math.max(12, chordLen * 0.07) * boostFactor;
           const extraNeeded = Math.max(0, target - naturalMag);
-          // Confidence in direction: 0 when natural is tiny, 1 once natural
-          // exceeds ~15px. Only applied at globe zoom where the flip
-          // happens; at zoom-in, the user doesn't cross flip angles much.
-          const confidence = isGlobe
-            ? Math.min(1, naturalMag / 15)
-            : 1;
+          // Direction confidence prevents arc flip when the great-circle
+          // projects nearly flat (naturalMag → 0 near the flip angle).
+          const confidence = Math.min(1, naturalMag / 15);
           const liftMag = extraNeeded * confidence;
           if (liftMag > 0.1) {
             const dirSign = naturalSigned / Math.max(0.5, naturalMag);

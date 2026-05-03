@@ -90,3 +90,8 @@ export function updatePin(id, fields) {
   const pin = trip.pins.find(p => p.id === id);
   if (pin) { Object.assign(pin, fields); saveState(); }
 }
+
+export function clearTripPins(id) {
+  const t = state.trips.find(t => t.id === id);
+  if (t) { t.pins = []; saveState(); listeners.closePanel(); listeners.renderPins(); }
+}

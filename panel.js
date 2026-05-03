@@ -3,9 +3,11 @@ import { customConfirm, escapeHtml, escapeAttr } from './modal.js';
 
 const panelEl = document.getElementById("panel");
 let openPinId = null;
+let onMovePin = null;
 
 export function isPanelOpen() { return openPinId !== null; }
 export function getOpenPinId() { return openPinId; }
+export function setMoveCallback(fn) { onMovePin = fn; }
 
 export function openPanel(pinId) {
   openPinId = pinId;
@@ -47,6 +49,7 @@ export function renderPanel() {
     '<label class="panel-field"><span>Notes</span>' +
       '<textarea class="panel-textarea" data-field="notes" placeholder="Anything else">' + escapeHtml(pin.notes) + '</textarea>' +
     '</label>' +
+    '<button class="panel-move">Move pin</button>' +
     '<button class="panel-delete">Delete pin</button>';
 
   panelEl.querySelector(".panel-close").addEventListener("click", closePanel);
@@ -57,6 +60,10 @@ export function renderPanel() {
     input.addEventListener("input", (ev) => {
       updatePin(pin.id, { [ev.target.dataset.field]: ev.target.value });
     });
+  });
+  panelEl.querySelector(".panel-move").addEventListener("click", () => {
+    closePanel();
+    if (onMovePin) onMovePin(pin.id);
   });
   panelEl.querySelector(".panel-delete").addEventListener("click", async () => {
     const ok = await customConfirm("Delete this pin?", { confirmLabel: "Delete", confirmStyle: "danger" });

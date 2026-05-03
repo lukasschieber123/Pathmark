@@ -1,11 +1,13 @@
 import {
   WATER, LAND, BORDER, COASTLINE, STREET, RIVER, LABEL, LABEL_HALO
 } from './constants.js';
-import { currentTrip, addPin, setListeners } from './state.js';
+import { currentTrip, addPin, updatePin, setListeners } from './state.js';
 import * as labels from './labels.js';
 import * as pins from './pins.js';
 import * as menu from './menu.js';
 import * as panel from './panel.js';
+import * as search from './search.js';
+import * as help from './help.js';
 
 const map = new maplibregl.Map({
   container: "map",
@@ -18,7 +20,10 @@ const map = new maplibregl.Map({
 });
 
 labels.init(map);
-pins.init(map, { onPinClick: panel.openPanel });
+pins.init(map, { onPinClick: handlePinClick });
+search.init(map);
+help.init();
+panel.setMoveCallback(startMoveMode);
 
 setListeners({
   renderAll,
@@ -85,6 +90,13 @@ map.on("style.load", () => {
     }
 
     if (type === "line") {
+      if (srcLayer === "water") {
+        // Hide any native ocean-outline layers — stroking the ocean polygon
+        // produces a pole circle at ~85°N and antimeridian seam lines as
+        // tile-edge artifacts. We rely on fill contrast for coastline visibility.
+        try { map.setLayoutProperty(id, "visibility", "none"); } catch (e) {}
+        continue;
+      }
       if (srcLayer === "waterway") {
         try { map.setPaintProperty(id, "line-color", RIVER); } catch (e) {}
         try { map.setPaintProperty(id, "line-opacity", 0.7); } catch (e) {}
@@ -141,7 +153,14 @@ map.on("style.load", () => {
           ]);
         } catch (e) {}
         map.setPaintProperty(id, "line-color", BORDER);
-        map.setPaintProperty(id, "line-opacity", 1.0);
+        // Belt-and-suspenders: even if the filter above lets a non-2 feature
+        // through (e.g. string vs integer admin_level in some tile datasets),
+        // the case expression ensures it gets opacity 0.
+        map.setPaintProperty(id, "line-opacity", [
+          "case",
+          ["==", ["get", "admin_level"], 2], 1.0,
+          0
+        ]);
         map.setPaintProperty(id, "line-width", [
           "interpolate", ["linear"], ["zoom"],
           0, 0.8,
@@ -282,8 +301,44 @@ function toast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
 }
+function toastPersist(msg) {
+  clearTimeout(toastTimer);
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+}
+function toastClear() {
+  clearTimeout(toastTimer);
+  toastEl.classList.remove("show");
+}
 
-map.on("click", (e) => {
+const mapEl = document.getElementById("map");
+let movingPinId = null;
+
+function handlePinClick(pinId) {
+  if (movingPinId) return;
+  panel.openPanel(pinId);
+}
+
+function startMoveMode(pinId) {
+  movingPinId = pinId;
+  pins.setMovingPin(pinId);
+  mapEl.style.cursor = "crosshair";
+  toastPersist("Double-click anywhere on the map to place the pin — Esc to cancel");
+}
+
+map.doubleClickZoom.disable();
+map.on("dblclick", (e) => {
+  if (movingPinId) {
+    const id = movingPinId;
+    updatePin(id, { lng: e.lngLat.lng, lat: e.lngLat.lat });
+    movingPinId = null;
+    pins.setMovingPin(null);
+    mapEl.style.cursor = "";
+    toastClear();
+    pins.renderPins();
+    panel.openPanel(id);
+    return;
+  }
   if (!currentTrip()) {
     toast("Create a trip first");
     return;
@@ -297,7 +352,14 @@ map.on("zoom", pins.updateOverlays);
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
-    if (panel.isPanelOpen()) panel.closePanel();
+    if (movingPinId) {
+      const id = movingPinId;
+      movingPinId = null;
+      pins.setMovingPin(null);
+      mapEl.style.cursor = "";
+      toastClear();
+      panel.openPanel(id);
+    } else if (panel.isPanelOpen()) panel.closePanel();
     else if (menu.isMenuOpen()) {
       menu.closeMenu();
       menu.renderMenu();
