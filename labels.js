@@ -5,6 +5,51 @@ let labelFrame = null;
 
 const MAX_LABELS = 90;
 
+// Two-tier abbreviations: short (zoom < 3) and medium (zoom 3–4.5).
+// At zoom ≥ 4.5 the full name is always used.
+const ABBR_SHORT = {
+  "Democratic Republic of the Congo": "DRC",
+  "Central African Republic":         "CAR",
+  "United States of America":         "USA",
+  "United States":                    "USA",
+  "United Kingdom":                   "UK",
+  "United Arab Emirates":             "UAE",
+  "Papua New Guinea":                 "PNG",
+  "Bosnia and Herzegovina":           "Bosnia",
+  "Republic of the Congo":            "Congo",
+  "Equatorial Guinea":                "Eq. Guinea",
+  "Trinidad and Tobago":              "Trinidad",
+  "Federated States of Micronesia":   "Micronesia",
+  "Dominican Republic":               "Dom. Rep.",
+  "Solomon Islands":                  "Solomon Is.",
+  "Marshall Islands":                 "Marshall Is.",
+  "South Sudan":                      "S. Sudan",
+  "North Macedonia":                  "N. Macedonia",
+  "Western Sahara":                   "W. Sahara",
+  "São Tomé and Príncipe":            "São Tomé",
+  "Antigua and Barbuda":              "Antigua",
+  "Saint Kitts and Nevis":            "St. Kitts",
+  "Saint Vincent and the Grenadines": "St. Vincent",
+};
+
+const ABBR_MED = {
+  "Democratic Republic of the Congo": "DR Congo",
+  "Central African Republic":         "C.A.R.",
+  "Federated States of Micronesia":   "Micronesia",
+  "Bosnia and Herzegovina":           "Bosnia-Herz.",
+  "Trinidad and Tobago":              "Trinidad",
+  "Solomon Islands":                  "Solomon Is.",
+  "Marshall Islands":                 "Marshall Is.",
+  "Republic of the Congo":            "Congo",
+  "Saint Vincent and the Grenadines": "St. Vincent",
+};
+
+function countryDisplayName(name, zoom) {
+  if (zoom < 3)   return ABBR_SHORT[name] ?? name;
+  if (zoom < 4.5) return ABBR_MED[name] ?? ABBR_SHORT[name] ?? name;
+  return name;
+}
+
 export function init(mapInstance) {
   map = mapInstance;
   labelsEl = document.getElementById("labels");
@@ -96,7 +141,8 @@ function renderLabels() {
     if (px.y < -60 || px.y > h + 60) continue;
     const key = name + "|" + cls;
     if (seen.has(key)) continue;
-    seen.set(key, { name, cls, x: px.x, y: px.y, rank });
+    const label = cls === "country" ? countryDisplayName(name, zoom) : name;
+    seen.set(key, { name: label, cls, x: px.x, y: px.y, rank });
   }
 
   const classOrder = { city: 0, town: 1, country: 2 };
@@ -109,7 +155,7 @@ function renderLabels() {
   const placed = [];
   const visible = [];
   for (const item of candidates) {
-    const fontSize = item.cls === "country" ? 11 : item.cls === "city" ? 10 : 9;
+    const fontSize = item.cls === "country" ? 12 : item.cls === "city" ? 11 : 10;
     const widthPx = item.name.length * fontSize * 0.6 + 6;
     const heightPx = fontSize * 1.4;
     const x1 = item.x - widthPx / 2;

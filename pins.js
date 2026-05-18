@@ -41,21 +41,16 @@ export function renderPins() {
 
 export function updatePinPositions() {
   if (!pinItems.length) return;
-  const zoom = map.getZoom();
-  const isGlobe = zoom < 5.5;
   const center = map.getCenter();
   const toRad = Math.PI / 180;
   const φc = center.lat * toRad;
   const sinφc = Math.sin(φc);
   const cosφc = Math.cos(φc);
   for (const { el, pin } of pinItems) {
-    let visible = true;
-    if (isGlobe) {
-      const φ = pin.lat * toRad;
-      const dλ = (pin.lng - center.lng) * toRad;
-      const cosDist = sinφc * Math.sin(φ) + cosφc * Math.cos(φ) * Math.cos(dλ);
-      if (cosDist < 0.05) visible = false;
-    }
+    const φ = pin.lat * toRad;
+    const dλ = (pin.lng - center.lng) * toRad;
+    const cosDist = sinφc * Math.sin(φ) + cosφc * Math.cos(φ) * Math.cos(dλ);
+    const visible = cosDist >= 0.05;
     const px = map.project([pin.lng, pin.lat]);
     if (!isFinite(px.x) || !isFinite(px.y)) {
       el.style.opacity = "0";
@@ -78,7 +73,6 @@ export function renderRouteLines() {
   if (!trip || trip.pins.length < 2) return;
 
   const zoom = map.getZoom();
-  const isGlobe = zoom < 5.5;
   const center = map.getCenter();
   const toRad = Math.PI / 180;
   const φc = center.lat * toRad;
@@ -86,12 +80,10 @@ export function renderRouteLines() {
   const cosφc = Math.cos(φc);
 
   function projectPoint(lng, lat) {
-    if (isGlobe) {
-      const φ = lat * toRad;
-      const dλ = (lng - center.lng) * toRad;
-      const cosDist = sinφc * Math.sin(φ) + cosφc * Math.cos(φ) * Math.cos(dλ);
-      if (cosDist < 0.05) return null;
-    }
+    const φ = lat * toRad;
+    const dλ = (lng - center.lng) * toRad;
+    const cosDist = sinφc * Math.sin(φ) + cosφc * Math.cos(φ) * Math.cos(dλ);
+    if (cosDist < 0.05) return null;
     const px = map.project([lng, lat]);
     if (!isFinite(px.x) || !isFinite(px.y)) return null;
     if (Math.abs(px.x) > 50000 || Math.abs(px.y) > 50000) return null;
