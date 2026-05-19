@@ -5,6 +5,21 @@ const menuEl = document.getElementById("menu");
 let menuOpen = false;
 let editingId = null;
 
+function tripSummary(trip) {
+  const dated = trip.pins.filter(p => p.dateStart).sort((a, b) => a.dateStart.localeCompare(b.dateStart));
+  if (!dated.length) return null;
+  const start = new Date(dated[0].dateStart);
+  const endStr = dated.reduce((best, p) => {
+    const d = p.dateEnd || p.dateStart;
+    return d > best ? d : best;
+  }, dated[0].dateStart);
+  const end = new Date(endStr);
+  const days = Math.round((end - start) / 86400000) + 1;
+  const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const count = trip.pins.length;
+  return fmt(start) + ' – ' + fmt(end) + ' · ' + days + (days === 1 ? ' day' : ' days') + ' · ' + count + (count === 1 ? ' pin' : ' pins');
+}
+
 export function isMenuOpen() { return menuOpen; }
 export function closeMenu() { menuOpen = false; editingId = null; }
 
@@ -35,9 +50,13 @@ export function renderMenu() {
         '</div>'
       );
     }
+    const summary = tripSummary(t);
     return (
       '<div class="menu-trip ' + (isCurrent ? 'current' : '') + '" data-id="' + t.id + '">' +
-        '<span class="menu-trip-name">' + escapeHtml(t.name) + '</span>' +
+        '<div class="menu-trip-info">' +
+          '<span class="menu-trip-name">' + escapeHtml(t.name) + '</span>' +
+          (summary ? '<div class="trip-summary">' + escapeHtml(summary) + '</div>' : '') +
+        '</div>' +
         (isCurrent
           ? '<button class="menu-icon" data-action="rename" title="Rename">✎</button>' +
             '<button class="menu-icon" data-action="delete" title="Delete">×</button>'

@@ -15,7 +15,15 @@ export function setListeners(l) {
 export function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const data = JSON.parse(raw);
+      data.trips?.forEach(t => t.pins?.forEach(p => {
+        delete p.dates;
+        if (!('dateStart' in p)) p.dateStart = '';
+        if (!('dateEnd' in p)) p.dateEnd = '';
+      }));
+      return data;
+    }
   } catch (e) {}
   return { trips: [], currentTripId: null };
 }
@@ -68,7 +76,7 @@ export function setCurrentTrip(id) {
 export function addPin(lng, lat) {
   const trip = currentTrip();
   if (!trip) return null;
-  const pin = { id: genId(), lng, lat, name: "", dates: "", flights: "", hotels: "", notes: "" };
+  const pin = { id: genId(), lng, lat, name: "", dateStart: "", dateEnd: "", flights: "", hotels: "", notes: "" };
   trip.pins.push(pin);
   saveState();
   listeners.renderPins();

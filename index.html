@@ -126,7 +126,7 @@
     .menu-trips { max-height: 240px; overflow-y: auto; }
     .menu-trip {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       padding: 8px 14px;
       cursor: pointer;
       font-size: 13px;
@@ -134,7 +134,17 @@
     }
     .menu-trip:hover { background: rgba(180, 200, 230, 0.06); }
     .menu-trip.current { background: rgba(245, 145, 51, 0.1); color: #fff; }
-    .menu-trip-name { flex: 1; }
+    .menu-trip-info { flex: 1; min-width: 0; }
+    .menu-trip-name { display: block; }
+    .trip-summary {
+      font-size: 10px;
+      color: rgba(255,255,255,0.38);
+      margin-top: 2px;
+      pointer-events: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     .menu-icon {
       background: none;
       border: none;
@@ -318,6 +328,16 @@
       outline: none;
     }
     .panel-input:focus, .panel-textarea:focus { border-color: rgba(245, 145, 51, 0.5); }
+    .panel-dates-row { display: flex; gap: 8px; margin-bottom: 4px; }
+    .panel-field-half { flex: 1; margin-bottom: 0; }
+    input[type="date"].panel-input { color-scheme: dark; cursor: pointer; }
+    .panel-date-calc {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 12px;
+      min-height: 14px;
+      line-height: 1.6;
+    }
     .panel-textarea {
       min-height: 56px;
       resize: vertical;

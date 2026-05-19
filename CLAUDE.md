@@ -21,7 +21,7 @@ Dependency order: `constants` → `state`, `modal`, `labels` → `pins`, `menu`,
 - **Pins are NOT MapLibre Markers.** Each pin is an absolute-positioned `<div>` inside `#pins`; `pins.updatePinPositions()` calls `map.project([lng, lat])` on every `move`/`zoom` and writes `left`/`top` directly. Behind-globe culling uses a `cosDist < 0.05` check. The pin's stem-tip lands on the projected pixel; head center is 23 px above.
 - **Route lines are SVG paths inside `#route-lines`.** Each segment between consecutive pins is a polyline of up to 96 great-circle samples (slerp on the unit sphere), each projected via `map.project()` then lifted 23 px upward to align with the pin head. To keep arcs visible at zoom-in (where natural projected curvature is geometrically tiny), an *extra* perpendicular lift is added — but only as much as needed to reach a target arc height of `max(12, chord × 0.07)`. The boost is `max(0, target − naturalMag)`, applied with `sin(π·t)` profile in the natural-curvature direction. At globe zoom, the boost is also scaled by `min(1, naturalMag / 15)` — a confidence factor that drops to 0 as the camera approaches the angle where the great-circle projects flat, preventing an abrupt curve flip when panning across that angle. Three layered paths per segment (shadow / glow / main) build the floating effect.
 - **Modals replace native dialogs.** `showModal({ message, hasInput, ... })` returns a Promise. `customConfirm` resolves boolean; `customPrompt` resolves string-or-null. Esc/Enter handled with capture-phase `keydown` + `stopImmediatePropagation` so the global Esc handler doesn't also fire.
-- **State persistence:** `localStorage` key `travel-globe-trips`, JSON shape `{ trips: [{ id, name, pins: [{ id, lng, lat, name, dates, flights, hotels, notes }] }], currentTripId }`.
+- **State persistence:** `localStorage` key `travel-globe-trips`, JSON shape `{ trips: [{ id, name, pins: [{ id, lng, lat, name, dateStart, dateEnd, flights, hotels, notes }] }], currentTripId }`.
 - **State→render decoupling:** `state.js` exports pure mutators that call registered listener callbacks. `main.js` registers `renderAll`, `renderMenu`, `renderPins`, `closePanel`, `closeMenu`. This keeps `state.js` DOM-free.
 
 ## Gotchas
@@ -43,7 +43,7 @@ Dependency order: `constants` → `state`, `modal`, `labels` → `pins`, `menu`,
 - State borders (admin_level 4 layer)
 - Loading indicator (orange pulsing dot, bottom-left)
 - Custom DOM-rendered place labels with collision avoidance
-- Detail panel (right-side, name / dates / flights / hotels / notes)
+- Detail panel (right-side, name / dateStart+dateEnd pickers / flights / hotels / notes; shows "X days here" + "X days to next stop" computed below pickers)
 - Persistence to `localStorage`
 
 **Deferred:**
