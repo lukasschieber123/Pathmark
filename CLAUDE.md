@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Travel Globe — a single-page MapLibre GL JS globe (OpenFreeMap dark, globe projection) for plotting trips as numbered orange pins connected by glowing great-circle flight-path arcs.
+Pathmark — a single-page MapLibre GL JS globe (OpenFreeMap dark, globe projection) for plotting trips as numbered orange pins connected by glowing great-circle flight-path arcs.
 
 ## File map
 

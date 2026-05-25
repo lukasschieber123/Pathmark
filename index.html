@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Travel Globe</title>
+  <title>Pathmark</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap">
@@ -76,11 +76,16 @@
     .label-city { font-size: 11px; }
     .label-town { font-size: 10px; color: #b4c8de; }
 
-    #menu {
+    #menu-area {
       position: fixed;
       top: 16px;
       left: 16px;
       z-index: 20;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    #menu {
       background: rgba(8, 16, 32, 0.85);
       border: 1px solid rgba(180, 200, 230, 0.32);
       border-radius: 4px;
@@ -90,6 +95,54 @@
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
     }
+    #timeline-btn {
+      background: rgba(8, 16, 32, 0.85);
+      border: 1px solid rgba(180, 200, 230, 0.32);
+      border-radius: 4px;
+      width: 42px;
+      height: 42px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      padding: 0;
+      flex-shrink: 0;
+    }
+    #timeline-btn:hover { background: rgba(245, 145, 51, 0.15); }
+    #timeline-view {
+      position: fixed;
+      inset: 0;
+      background: #060A14;
+      z-index: 25;
+      display: none;
+      flex-direction: column;
+      font-family: "EB Garamond", "Times New Roman", serif;
+      color: #d8e6f5;
+    }
+    #timeline-view.open { display: flex; }
+    .tl-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(180, 200, 230, 0.16);
+    }
+    .tl-title { font-size: 18px; letter-spacing: 0.04em; }
+    .tl-close {
+      background: none;
+      border: none;
+      color: #8aa0b8;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tl-close:hover { color: #fff; }
+    .tl-body { flex: 1; overflow: auto; padding: 32px 24px; }
     .menu-toggle {
       background: none;
       border: none;
@@ -750,7 +803,15 @@
     <input id="search-input" type="text" placeholder="Search places…" autocomplete="off" spellcheck="false">
     <div id="search-results"></div>
   </div>
-  <div id="menu"></div>
+  <div id="menu-area">
+    <div id="menu"></div>
+    <button id="timeline-btn" title="Open Timeline">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#f59133" xmlns="http://www.w3.org/2000/svg">
+        <path d="M23,8c0,1.1-0.9,2-2,2c-0.18,0-0.35-0.02-0.51-0.07l-3.56,3.55C16.98,13.64,17,13.82,17,14c0,1.1-0.9,2-2,2s-2-0.9-2-2c0-0.18,0.02-0.36,0.07-0.52l-2.55-2.55C10.36,10.98,10.18,11,10,11s-0.36-0.02-0.52-0.07l-4.55,4.56C4.98,15.65,5,15.82,5,16c0,1.1-0.9,2-2,2s-2-0.9-2-2s0.9-2,2-2c0.18,0,0.35,0.02,0.51,0.07l4.56-4.55C8.02,9.36,8,9.18,8,9c0-1.1,0.9-2,2-2s2,0.9,2,2c0,0.18-0.02,0.36-0.07,0.52l2.55,2.55C14.64,12.02,14.82,12,15,12s0.36,0.02,0.52,0.07l3.55-3.56C19.02,8.35,19,8.18,19,8c0-1.1,0.9-2,2-2S23,6.9,23,8z"/>
+      </svg>
+    </button>
+  </div>
+  <div id="timeline-view"></div>
   <div id="panel"></div>
   <div id="toast"></div>
   <div id="loader"></div>

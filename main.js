@@ -8,6 +8,7 @@ import * as menu from './menu.js';
 import * as panel from './panel.js';
 import * as search from './search.js';
 import * as help from './help.js';
+import * as timeline from './timeline.js';
 
 const map = new maplibregl.Map({
   container: "map",
@@ -23,6 +24,10 @@ labels.init(map);
 pins.init(map, { onPinClick: handlePinClick });
 search.init(map);
 help.init();
+
+document.getElementById('timeline-btn').addEventListener('click', () => {
+  if (!timeline.isTimelineOpen()) timeline.openTimeline();
+});
 panel.setMoveCallback(startMoveMode);
 
 setListeners({
@@ -352,6 +357,7 @@ map.on("zoom", pins.updateOverlays);
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
+    if (timeline.isTimelineOpen()) { timeline.closeTimeline(); return; }
     if (movingPinId) {
       const id = movingPinId;
       movingPinId = null;
