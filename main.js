@@ -2,6 +2,7 @@ import {
   WATER, LAND, BORDER, COASTLINE, STREET, RIVER, LABEL, LABEL_HALO
 } from './constants.js';
 import { currentTrip, addPin, updatePin, setListeners } from './state.js';
+import { reverseName } from './geocode.js';
 import * as labels from './labels.js';
 import * as pins from './pins.js';
 import * as menu from './menu.js';
@@ -342,6 +343,13 @@ map.on("dblclick", (e) => {
     toastClear();
     pins.renderPins();
     panel.openPanel(id);
+    reverseName(e.lngLat.lng, e.lngLat.lat).then(name => {
+      if (!name) return;
+      updatePin(id, { name });
+      pins.renderPins();
+      if (panel.isPanelOpen() && panel.getOpenPinId() === id) panel.renderPanel();
+      timeline.renderTimeline();
+    });
     return;
   }
   if (!currentTrip()) {
@@ -349,7 +357,20 @@ map.on("dblclick", (e) => {
     return;
   }
   const pin = addPin(e.lngLat.lng, e.lngLat.lat);
-  if (pin) panel.openPanel(pin.id);
+  if (pin) {
+    panel.openPanel(pin.id);
+    reverseName(e.lngLat.lng, e.lngLat.lat).then(name => {
+      if (!name) return;
+      const trip = currentTrip();
+      const p = trip && trip.pins.find(pp => pp.id === pin.id);
+      if (p && !p.name) {
+        updatePin(pin.id, { name });
+        pins.renderPins();
+        if (panel.isPanelOpen() && panel.getOpenPinId() === pin.id) panel.renderPanel();
+        timeline.renderTimeline();
+      }
+    });
+  }
 });
 
 map.on("move", pins.updateOverlays);

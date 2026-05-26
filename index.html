@@ -142,7 +142,158 @@
       justify-content: center;
     }
     .tl-close:hover { color: #fff; }
-    .tl-body { flex: 1; overflow: auto; padding: 32px 24px; }
+    .tl-key-hint {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.4;
+    }
+    .tl-key {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 11px;
+      color: #8aa0b8;
+      border: 1px solid rgba(180, 200, 230, 0.3);
+      border-radius: 3px;
+      padding: 2px 7px;
+      background: rgba(180, 200, 230, 0.06);
+      line-height: 1.5;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .tl-key:hover {
+      background: rgba(180, 200, 230, 0.14);
+      color: #d8e6f5;
+      border-color: rgba(180, 200, 230, 0.5);
+    }
+    .tl-body { flex: 1; overflow: hidden; display: flex; }
+    .tl-toolbar {
+      width: 54px;
+      flex-shrink: 0;
+      border-right: 1px solid rgba(180, 200, 230, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 0;
+      gap: 6px;
+    }
+    .tl-tool {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      background: none;
+      border: none;
+      color: #8aa0b8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tl-tool:hover { background: rgba(180, 200, 230, 0.08); color: #d8e6f5; }
+    .tl-tool.tl-tool-active { background: rgba(245, 145, 51, 0.14); color: #f59133; }
+    .tl-sandbox-area {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .tl-sandbox-label {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(180, 200, 230, 0.28);
+      padding: 18px 28px 0;
+      flex-shrink: 0;
+    }
+    .tl-canvas {
+      flex: 1;
+      position: relative;
+      min-height: 500px;
+    }
+    .tl-canvas-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: rgba(180, 200, 230, 0.2);
+      font-style: italic;
+      pointer-events: none;
+    }
+    .tl-strip {
+      overflow-x: auto;
+      padding: 28px 40px;
+      border-bottom: 1px solid rgba(180, 200, 230, 0.12);
+      flex-shrink: 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      -webkit-mask-image: linear-gradient(to right, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+    }
+    .tl-strip::-webkit-scrollbar { display: none; }
+    .tl-track {
+      display: flex;
+      align-items: center;
+      min-width: max-content;
+    }
+    .tl-stop {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      min-width: 72px;
+      padding: 0 8px;
+    }
+    .tl-stop-name {
+      font-size: 13px;
+      color: #8aa0b8;
+      white-space: nowrap;
+      padding-bottom: 9px;
+      text-align: center;
+      letter-spacing: 0.03em;
+      transition: color 0.15s;
+    }
+    .tl-stop-active .tl-stop-name,
+    .tl-stop:hover .tl-stop-name { color: #d8e6f5; }
+    .tl-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(180, 200, 230, 0.12);
+      border: 1.5px solid rgba(180, 200, 230, 0.32);
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+    .tl-stop-active .tl-dot {
+      background: #f59133;
+      border-color: #f59133;
+      box-shadow: 0 0 8px rgba(245, 145, 51, 0.55);
+    }
+    .tl-stop:hover:not(.tl-stop-active) .tl-dot {
+      background: rgba(245, 145, 51, 0.25);
+      border-color: rgba(245, 145, 51, 0.5);
+    }
+    .tl-stop-date {
+      font-size: 11px;
+      color: rgba(180, 200, 230, 0.38);
+      white-space: nowrap;
+      padding-top: 9px;
+      text-align: center;
+      min-height: 20px;
+      letter-spacing: 0.02em;
+    }
+    .tl-connector {
+      width: 56px;
+      flex-shrink: 0;
+      height: 1px;
+      background: rgba(180, 200, 230, 0.16);
+    }
+    .tl-empty {
+      font-size: 13px;
+      color: #8aa0b8;
+      font-style: italic;
+    }
     .menu-toggle {
       background: none;
       border: none;
