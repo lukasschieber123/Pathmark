@@ -21,6 +21,7 @@ export function loadState() {
         delete p.dates;
         if (!('dateStart' in p)) p.dateStart = '';
         if (!('dateEnd' in p)) p.dateEnd = '';
+        if (!p.sandbox) p.sandbox = { items: [] };
       }));
       return data;
     }
@@ -76,7 +77,7 @@ export function setCurrentTrip(id) {
 export function addPin(lng, lat) {
   const trip = currentTrip();
   if (!trip) return null;
-  const pin = { id: genId(), lng, lat, name: "", dateStart: "", dateEnd: "", flights: "", hotels: "", notes: "" };
+  const pin = { id: genId(), lng, lat, name: "", dateStart: "", dateEnd: "", flights: "", hotels: "", notes: "", sandbox: { items: [] } };
   trip.pins.push(pin);
   saveState();
   listeners.renderPins();

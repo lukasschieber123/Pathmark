@@ -184,6 +184,7 @@ function renderLabels() {
     div.style.top = item.y + "px";
     frag.appendChild(div);
   }
+
   labelsEl.textContent = "";
   labelsEl.appendChild(frag);
 }

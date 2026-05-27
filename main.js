@@ -11,6 +11,7 @@ import * as search from './search.js';
 import * as help from './help.js';
 import * as timeline from './timeline.js';
 
+
 const map = new maplibregl.Map({
   container: "map",
   style: "https://tiles.openfreemap.org/styles/dark",

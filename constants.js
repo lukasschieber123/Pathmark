@@ -7,3 +7,5 @@ export const RIVER = "#2a4570";
 export const LABEL = "#c8dcee";
 export const LABEL_HALO = "#05101f";
 export const STORAGE_KEY = "travel-globe-trips";
+export const SANDBOX_W = 3200;
+export const SANDBOX_H = 2400;
