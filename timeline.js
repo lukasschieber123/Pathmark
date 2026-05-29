@@ -80,7 +80,7 @@ function fitToView(sandboxEl) {
 }
 
 function setCursor(sandboxEl) {
-  if (activeTool === 'note') { sandboxEl.style.cursor = 'crosshair'; return; }
+  if (activeTool === 'note' || activeTool === 'textbox' || activeTool === 'checklist') { sandboxEl.style.cursor = 'crosshair'; return; }
   if (activeTool === 'pen')  { sandboxEl.style.cursor = drawMode === 'eraser' ? 'cell' : 'crosshair'; return; }
   sandboxEl.style.cursor = 'grab';
 }
@@ -283,6 +283,19 @@ function render() {
             '<line x1="4.5" y1="11.5" x2="8.5" y2="11.5" stroke="currentColor" stroke-width="1.2"/>' +
           '</svg>' +
         '</button>' +
+        '<button class="tl-tool' + (activeTool === 'textbox' ? ' tl-tool-active' : '') + '" data-tool="textbox" title="Text">' +
+          '<svg width="14" height="16" viewBox="0 0 14 16" fill="none">' +
+            '<path d="M1 2h12M7 2v12M4 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+          '</svg>' +
+        '</button>' +
+        '<button class="tl-tool' + (activeTool === 'checklist' ? ' tl-tool-active' : '') + '" data-tool="checklist" title="Checklist">' +
+          '<svg width="15" height="14" viewBox="0 0 15 14" fill="none">' +
+            '<rect x="0.75" y="0.75" width="4.5" height="4.5" rx="0.75" stroke="currentColor" stroke-width="1.3"/>' +
+            '<line x1="7.5" y1="3" x2="14.25" y2="3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>' +
+            '<rect x="0.75" y="8.75" width="4.5" height="4.5" rx="0.75" stroke="currentColor" stroke-width="1.3"/>' +
+            '<line x1="7.5" y1="11" x2="14.25" y2="11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>' +
+          '</svg>' +
+        '</button>' +
         '<button class="tl-tool" data-tool="image" title="Upload photo">' +
           '<svg width="14" height="16" viewBox="0 0 14 16" fill="none">' +
             '<path d="M7 11V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
@@ -440,8 +453,8 @@ function wireSandbox(sandboxEl, canvasEl, activePin) {
   let panning = false, startX, startY, startPanX, startPanY;
 
   sandboxEl.addEventListener('mousedown', e => {
-    if (!e.target.closest('.tl-note, .tl-img-card')) deselectAll();
-    if (e.target.closest('.tl-note, .tl-img-card')) return;
+    if (!e.target.closest('.tl-note, .tl-img-card, .tl-textbox, .tl-checklist')) deselectAll();
+    if (e.target.closest('.tl-note, .tl-img-card, .tl-textbox, .tl-checklist')) return;
 
     if (activeTool === 'pen') {
       e.preventDefault();
@@ -553,7 +566,8 @@ function wireSandbox(sandboxEl, canvasEl, activePin) {
   function onBackspace(e) {
     if (e.key !== 'Backspace' && e.key !== 'Delete') return;
     if (!selectedItem) return;
-    if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') return;
+    const ae = document.activeElement;
+    if (ae && (ae.tagName === 'TEXTAREA' || ae.tagName === 'INPUT')) return;
     e.preventDefault();
     selectedPin.sandbox.items = selectedPin.sandbox.items.filter(it => it.id !== selectedItem.id);
     updatePin(selectedPin.id, { sandbox: selectedPin.sandbox });
@@ -584,12 +598,16 @@ function wireSandbox(sandboxEl, canvasEl, activePin) {
   }, { passive: false });
 
   sandboxEl.addEventListener('click', e => {
-    if (activeTool !== 'note') return;
-    if (e.target.closest('.tl-note')) return;
     const rect = sandboxEl.getBoundingClientRect();
     const cx = (e.clientX - rect.left - panX) / zoom;
     const cy = (e.clientY - rect.top  - panY) / zoom;
-    createNote(canvasEl, activePin, cx, cy);
+    if (activeTool === 'note' && !e.target.closest('.tl-note')) {
+      createNote(canvasEl, activePin, cx, cy);
+    } else if (activeTool === 'textbox' && !e.target.closest('.tl-textbox')) {
+      createTextbox(canvasEl, activePin, cx, cy);
+    } else if (activeTool === 'checklist' && !e.target.closest('.tl-checklist')) {
+      createChecklist(canvasEl, activePin, cx, cy);
+    }
   });
 }
 
@@ -607,6 +625,10 @@ function renderNotes(canvasEl, pin) {
       mountNote(canvasEl, pin, item);
     } else if (item.type === 'image') {
       mountImage(canvasEl, pin, item);
+    } else if (item.type === 'textbox') {
+      mountTextbox(canvasEl, pin, item);
+    } else if (item.type === 'checklist') {
+      mountChecklist(canvasEl, pin, item);
     }
   });
 }
@@ -649,24 +671,23 @@ function mountNote(canvasEl, pin, item) {
     el.remove();
   });
 
-  makeDraggable(el, pin, item, canvasEl);
+  makeDraggable(el, pin, item, el.querySelector('.tl-note-drag'));
   canvasEl.appendChild(el);
   autoResize();
 }
 
-function makeDraggable(noteEl, pin, item, canvasEl) {
-  const handle = noteEl.querySelector('.tl-note-drag');
+function makeDraggable(el, pin, item, handle) {
   handle.addEventListener('mousedown', e => {
-    if (e.target.classList.contains('tl-note-delete')) return;
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
     e.preventDefault(); e.stopPropagation();
     const startX = e.clientX, startY = e.clientY;
-    const startLeft = noteEl.offsetLeft, startTop = noteEl.offsetTop;
+    const startLeft = el.offsetLeft, startTop = el.offsetTop;
     function onMove(e) {
-      noteEl.style.left = (startLeft + (e.clientX - startX) / zoom) + 'px';
-      noteEl.style.top  = (startTop  + (e.clientY - startY) / zoom) + 'px';
+      el.style.left = (startLeft + (e.clientX - startX) / zoom) + 'px';
+      el.style.top  = (startTop  + (e.clientY - startY) / zoom) + 'px';
     }
     function onUp() {
-      item.xPx = noteEl.offsetLeft; item.yPx = noteEl.offsetTop;
+      item.xPx = el.offsetLeft; item.yPx = el.offsetTop;
       updatePin(pin.id, { sandbox: pin.sandbox });
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
@@ -773,4 +794,203 @@ function makeResizable(el, pin, item) {
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   });
+}
+
+// --- Text boxes ---
+
+function createTextbox(canvasEl, pin, xPx, yPx) {
+  const item = { type: 'textbox', id: genId(), xPx, yPx, text: '' };
+  pin.sandbox.items.push(item);
+  updatePin(pin.id, { sandbox: pin.sandbox });
+  mountTextbox(canvasEl, pin, item, true);
+  activeTool = 'cursor';
+  viewEl.querySelectorAll('.tl-tool').forEach(b =>
+    b.classList.toggle('tl-tool-active', b.dataset.tool === 'cursor')
+  );
+  viewEl.querySelector('.tl-draw-strip')?.classList.remove('open');
+  closeSub();
+  const sandboxEl = viewEl.querySelector('.tl-sandbox-area');
+  if (sandboxEl) setCursor(sandboxEl);
+}
+
+function mountTextbox(canvasEl, pin, item, autoFocus = false) {
+  const el = document.createElement('div');
+  el.className = 'tl-textbox';
+  el.style.left = item.xPx + 'px';
+  el.style.top  = item.yPx + 'px';
+  el.innerHTML = '<textarea class="tl-textbox-body" placeholder="Type here…">' + escapeHtml(item.text) + '</textarea>';
+
+  const textarea = el.querySelector('.tl-textbox-body');
+  const autoResize = () => { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; };
+  textarea.addEventListener('input', () => { item.text = textarea.value; updatePin(pin.id, { sandbox: pin.sandbox }); autoResize(); });
+
+  el.addEventListener('mousedown', e => {
+    e.stopPropagation();
+    if (!el.classList.contains('tl-selected')) {
+      e.preventDefault();
+      selectItem(el, pin, item);
+      return;
+    }
+    if (e.target.tagName === 'TEXTAREA') return; // let textarea handle focus/cursor placement
+    textarea.blur(); // so backspace deletes the box, not text
+    e.preventDefault();
+    const startX = e.clientX, startY = e.clientY;
+    const startLeft = el.offsetLeft, startTop = el.offsetTop;
+    function onMove(e) {
+      el.style.left = (startLeft + (e.clientX - startX) / zoom) + 'px';
+      el.style.top  = (startTop  + (e.clientY - startY) / zoom) + 'px';
+    }
+    function onUp() {
+      item.xPx = el.offsetLeft; item.yPx = el.offsetTop;
+      updatePin(pin.id, { sandbox: pin.sandbox });
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  canvasEl.appendChild(el);
+  autoResize();
+  if (autoFocus) {
+    selectItem(el, pin, item);
+    textarea.focus();
+  }
+}
+
+// --- Checklists ---
+
+function createChecklist(canvasEl, pin, xPx, yPx) {
+  const item = { type: 'checklist', id: genId(), xPx, yPx, title: '', items: [] };
+  pin.sandbox.items.push(item);
+  updatePin(pin.id, { sandbox: pin.sandbox });
+  mountChecklist(canvasEl, pin, item);
+  activeTool = 'cursor';
+  viewEl.querySelectorAll('.tl-tool').forEach(b =>
+    b.classList.toggle('tl-tool-active', b.dataset.tool === 'cursor')
+  );
+  viewEl.querySelector('.tl-draw-strip')?.classList.remove('open');
+  closeSub();
+  const sandboxEl = viewEl.querySelector('.tl-sandbox-area');
+  if (sandboxEl) setCursor(sandboxEl);
+}
+
+function mountChecklist(canvasEl, pin, item) {
+  const el = document.createElement('div');
+  el.className = 'tl-checklist';
+  el.style.left = item.xPx + 'px';
+  el.style.top  = item.yPx + 'px';
+
+  el.innerHTML =
+    '<div class="tl-checklist-drag">' +
+      '<input class="tl-checklist-title" placeholder="Title…" value="' + escapeAttr(item.title || '') + '"/>' +
+      '<button class="tl-checklist-close" title="Delete">×</button>' +
+    '</div>' +
+    '<div class="tl-checklist-body"></div>' +
+    '<div class="tl-cl-add-row">' +
+      '<span class="tl-cl-add-icon">+</span>' +
+      '<input class="tl-cl-add-input" placeholder="Add item…"/>' +
+    '</div>';
+
+  function buildItems() {
+    const body = el.querySelector('.tl-checklist-body');
+    body.innerHTML = item.items.map(ci =>
+      '<div class="tl-cl-item" data-cid="' + ci.id + '">' +
+        '<div class="tl-cl-check' + (ci.done ? ' checked' : '') + '"></div>' +
+        '<input class="tl-cl-text' + (ci.done ? ' done' : '') + '" value="' + escapeAttr(ci.text) + '" placeholder="Item…"/>' +
+        '<button class="tl-cl-remove" title="Remove">×</button>' +
+      '</div>'
+    ).join('');
+    wireItems();
+  }
+
+  function wireItems() {
+    el.querySelectorAll('.tl-cl-item').forEach(row => {
+      const cid = row.dataset.cid;
+      const ci = item.items.find(x => x.id === cid);
+      if (!ci) return;
+      row.querySelector('.tl-cl-check').addEventListener('click', e => {
+        e.stopPropagation();
+        ci.done = !ci.done;
+        row.querySelector('.tl-cl-check').classList.toggle('checked', ci.done);
+        row.querySelector('.tl-cl-text').classList.toggle('done', ci.done);
+        updatePin(pin.id, { sandbox: pin.sandbox });
+      });
+      row.querySelector('.tl-cl-text').addEventListener('input', e => {
+        ci.text = e.target.value;
+        updatePin(pin.id, { sandbox: pin.sandbox });
+      });
+      row.querySelector('.tl-cl-text').addEventListener('mousedown', e => e.stopPropagation());
+      row.querySelector('.tl-cl-text').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); addInput.focus(); }
+      });
+      row.querySelector('.tl-cl-remove').addEventListener('click', e => {
+        e.stopPropagation();
+        item.items = item.items.filter(x => x.id !== cid);
+        updatePin(pin.id, { sandbox: pin.sandbox });
+        buildItems();
+      });
+    });
+  }
+
+  buildItems();
+
+  const titleInput = el.querySelector('.tl-checklist-title');
+  titleInput.addEventListener('input', () => { item.title = titleInput.value; updatePin(pin.id, { sandbox: pin.sandbox }); });
+
+  el.querySelector('.tl-checklist-close').addEventListener('click', e => {
+    e.stopPropagation();
+    pin.sandbox.items = pin.sandbox.items.filter(it => it.id !== item.id);
+    updatePin(pin.id, { sandbox: pin.sandbox });
+    el.remove();
+  });
+
+  const addInput = el.querySelector('.tl-cl-add-input');
+  addInput.addEventListener('mousedown', e => e.stopPropagation());
+  addInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const text = addInput.value.trim();
+      if (!text) return;
+      item.items.push({ id: genId(), text, done: false });
+      updatePin(pin.id, { sandbox: pin.sandbox });
+      addInput.value = '';
+      buildItems();
+      addInput.focus();
+    }
+  });
+
+  el.querySelector('.tl-cl-add-row').addEventListener('mousedown', e => e.stopPropagation());
+  el.querySelector('.tl-cl-add-icon').addEventListener('click', () => addInput.focus());
+
+  // Whole header bar is draggable; threshold distinguishes click-to-focus from drag
+  const dragHandle = el.querySelector('.tl-checklist-drag');
+  dragHandle.addEventListener('mousedown', e => {
+    if (e.target.tagName === 'BUTTON') return;
+    e.preventDefault();
+    const startX = e.clientX, startY = e.clientY;
+    const startLeft = el.offsetLeft, startTop = el.offsetTop;
+    let moved = false;
+    function onMove(me) {
+      if (!moved && Math.hypot(me.clientX - startX, me.clientY - startY) > 4) moved = true;
+      if (moved) {
+        el.style.left = (startLeft + (me.clientX - startX) / zoom) + 'px';
+        el.style.top  = (startTop  + (me.clientY - startY) / zoom) + 'px';
+      }
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      if (moved) {
+        item.xPx = el.offsetLeft; item.yPx = el.offsetTop;
+        updatePin(pin.id, { sandbox: pin.sandbox });
+      } else if (e.target === titleInput || e.target.closest('.tl-checklist-title')) {
+        titleInput.focus();
+      }
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  canvasEl.appendChild(el);
 }
