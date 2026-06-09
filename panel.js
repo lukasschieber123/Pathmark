@@ -1,6 +1,13 @@
 import { currentTrip, updatePin, deletePin } from './state.js';
 import { customConfirm, escapeHtml, escapeAttr } from './modal.js';
 
+// Notes are edited (with rich formatting) in the Timeline and stored as HTML.
+// Older notes were plain text — convert those so the preview keeps line breaks.
+function notesToHtml(notes) {
+  if (/<(p|div|br|h[1-6]|ul|ol|li|b|i|strong|em|u|span|a)[\s>\/]/i.test(notes)) return notes;
+  return escapeHtml(notes).replace(/\n/g, '<br>');
+}
+
 function dateSummaryLines(pin, trip) {
   const parts = [];
   if (pin.dateStart && pin.dateEnd) {
@@ -52,6 +59,17 @@ export function renderPanel() {
   const idx = trip.pins.findIndex(p => p.id === openPinId);
   if (idx < 0) { closePanel(); return; }
   const pin = trip.pins[idx];
+
+  // Legacy pins kept separate Flights/Hotels fields. Fold any existing content
+  // into the single Notes field (one-time, on first open) so nothing is lost.
+  if ((pin.flights && pin.flights.trim()) || (pin.hotels && pin.hotels.trim())) {
+    const merged = [];
+    if (pin.flights && pin.flights.trim()) merged.push('Flights: ' + pin.flights.trim());
+    if (pin.hotels && pin.hotels.trim()) merged.push('Hotels: ' + pin.hotels.trim());
+    if (pin.notes && pin.notes.trim()) merged.push(pin.notes.trim());
+    updatePin(pin.id, { notes: merged.join('\n\n'), flights: '', hotels: '' });
+  }
+
   panelEl.innerHTML =
     '<div class="panel-header">' +
       '<span class="panel-num">' + (idx + 1) + '</span>' +
@@ -67,14 +85,10 @@ export function renderPanel() {
       '</label>' +
     '</div>' +
     '<div class="panel-date-calc">' + dateSummaryLines(pin, trip) + '</div>' +
-    '<label class="panel-field"><span>Flights</span>' +
-      '<textarea class="panel-textarea" data-field="flights" placeholder="Flight info">' + escapeHtml(pin.flights) + '</textarea>' +
-    '</label>' +
-    '<label class="panel-field"><span>Hotels</span>' +
-      '<textarea class="panel-textarea" data-field="hotels" placeholder="Where you\'re staying">' + escapeHtml(pin.hotels) + '</textarea>' +
-    '</label>' +
     '<label class="panel-field"><span>Notes</span>' +
-      '<textarea class="panel-textarea" data-field="notes" placeholder="Anything else">' + escapeHtml(pin.notes) + '</textarea>' +
+      (pin.notes && pin.notes.trim()
+        ? '<div class="panel-notes-preview">' + notesToHtml(pin.notes) + '</div>'
+        : '<div class="panel-notes-empty">No notes yet — add them in the Timeline.</div>') +
     '</label>' +
     '<button class="panel-move">Move pin</button>' +
     '<button class="panel-delete">Delete pin</button>';

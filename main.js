@@ -281,6 +281,7 @@ map.on("style.load", () => {
   }
 
   labels.scheduleLabels();
+  requestAnimationFrame(() => requestAnimationFrame(pins.updateOverlays));
 });
 
 map.on("move", labels.scheduleLabels);

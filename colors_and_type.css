@@ -1,0 +1,167 @@
+/* ============================================================
+   Pathmark — Colors & Type
+   Dark flight-tracker aesthetic. Serif-forward (EB Garamond),
+   deep navy surfaces, single warm-orange accent.
+   EB Garamond is loaded from Google Fonts (the real brand font).
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+:root {
+  /* ---------- Brand accent (warm orange) ---------- */
+  --accent:            #f59133;  /* primary orange — buttons, pins, active */
+  --accent-hover:      #ffa54f;  /* brighter on hover */
+  --accent-bright:     #ffc888;  /* pin-head highlight */
+  --accent-deep:       #c45414;  /* pin-head core / shadow */
+  --accent-stem:       #d96420;  /* pin stem */
+
+  /* ---------- Surfaces (deep navy) ---------- */
+  --bg-space:          #060A14;  /* deepest — globe void, timeline bg */
+  --bg-water:          #060f24;  /* landing page / map water */
+  --bg-land:           #15294f;  /* map landmass */
+  --surface:           rgba(8, 16, 32, 0.85);  /* floating panels (menu, search, modal) */
+  --surface-strong:    rgba(8, 16, 32, 0.92);  /* panel / toast / info */
+  --surface-solid:     rgba(8, 16, 32, 0.96);  /* modals */
+  --surface-paper:     #ffffff;  /* timeline sticky notes / checklists */
+  --paper-drag:        #e4e4e4;  /* sticky-note drag bar */
+
+  /* ---------- Foreground / text ---------- */
+  --fg1:               #e8f2fa;  /* brightest — wordmark, headings */
+  --fg2:               #d8e6f5;  /* default body on dark */
+  --fg3:               #c8dcee;  /* secondary body */
+  --fg-muted:          #8aa0b8;  /* labels, captions, muted UI */
+  --fg-muted-2:        #8aa8c8;  /* muted on landing */
+  --fg-faint:          #4a6480;  /* footer / faintest */
+  --fg-link:           #7aa0c0;  /* links */
+  --fg-on-accent:      #060f24;  /* dark text on orange fills */
+  --fg-paper:          #1a1a2e;  /* text on white paper cards */
+
+  /* ---------- Map cartography ---------- */
+  --map-border:        #E0E0E0;  /* admin borders + coastline */
+  --map-street:        #4488CC;
+  --map-river:         #2a4570;
+  --map-label:         #c8dcee;
+  --map-label-halo:    #05101f;
+
+  /* ---------- Lines / borders ---------- */
+  --line:              rgba(180, 200, 230, 0.32);  /* standard panel border */
+  --line-soft:         rgba(180, 200, 230, 0.16);  /* subtle dividers */
+  --line-faint:        rgba(180, 200, 230, 0.08);  /* faintest hairline */
+  --fill-ghost:        rgba(180, 200, 230, 0.05);  /* input fill */
+  --fill-hover:        rgba(180, 200, 230, 0.08);  /* hover wash */
+
+  /* ---------- Accent tints (orange washes) ---------- */
+  --accent-wash:       rgba(245, 145, 51, 0.10);  /* selected row / hover */
+  --accent-wash-2:     rgba(245, 145, 51, 0.14);  /* active tool bg */
+  --accent-tint-btn:   rgba(245, 145, 51, 0.18);  /* secondary orange button */
+  --accent-glow:       rgba(245, 145, 51, 0.55);  /* pin / dot glow */
+  --accent-border:     rgba(245, 145, 51, 0.42);
+
+  /* ---------- Semantic: danger ---------- */
+  --danger:            #e08080;
+  --danger-bg:         rgba(220, 80, 80, 0.10);
+  --danger-border:     rgba(220, 80, 80, 0.28);
+
+  /* ---------- Semantic: info / move (cool blue) ---------- */
+  --info:              #8ab8e0;
+  --info-bg:           rgba(100, 160, 220, 0.08);
+  --info-border:       rgba(100, 160, 220, 0.25);
+
+  /* ---------- Type families ---------- */
+  --font-serif:  "EB Garamond", "Times New Roman", Georgia, serif;  /* everything */
+  --font-system: system-ui, -apple-system, sans-serif;             /* tiny key-hint chips only */
+
+  /* ---------- Type scale ---------- */
+  --text-wordmark: 52px;  /* landing wordmark, w600, 0.04em */
+  --text-h1:       28px;
+  --text-h2:       22px;  /* legal headings, panel title */
+  --text-lead:     20px;  /* italic tagline */
+  --text-title:    18px;  /* timeline / open button */
+  --text-body:     16px;
+  --text-ui:       14px;  /* menu toggle, modal message */
+  --text-sm:       13px;  /* rows, inputs, toast */
+  --text-xs:       12px;  /* summaries, search results */
+  --text-2xs:      11px;  /* dates, key hints */
+  --text-3xs:      10px;  /* field micro-labels, pin number */
+
+  /* ---------- Radii ---------- */
+  --radius-sm:  3px;   /* inputs, chips, small buttons */
+  --radius:     4px;   /* panels, menus, primary buttons */
+  --radius-pill: 50%;  /* pins, compass, help, dots */
+
+  /* ---------- Elevation (shadows) ---------- */
+  --shadow-modal:  0 12px 40px rgba(0, 0, 0, 0.55);
+  --shadow-paper:  0 6px 24px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.2);
+  --shadow-pin:    0 0 10px rgba(245, 145, 51, 0.5), inset 0 0 3px rgba(255, 255, 255, 0.25);
+
+  /* ---------- Blur (floating glass) ---------- */
+  --blur: blur(6px);
+
+  /* ---------- Motion ---------- */
+  --t-fast:  0.15s ease;   /* hover / color */
+  --t-panel: 0.25s ease;   /* panel slide */
+}
+
+/* ============================================================
+   Semantic element styles
+   ============================================================ */
+
+.pm-wordmark {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: var(--text-wordmark);
+  letter-spacing: 0.04em;
+  color: var(--fg1);
+}
+
+.pm-tagline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--text-lead);
+  color: var(--fg-muted-2);
+  line-height: 1.5;
+}
+
+.pm-h2 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: var(--text-h2);
+  color: var(--fg1);
+  letter-spacing: 0.02em;
+}
+
+.pm-body {
+  font-family: var(--font-serif);
+  font-size: var(--text-body);
+  line-height: 1.7;
+  color: var(--fg-muted-2);
+}
+
+/* Micro field label — uppercase, wide-tracked, muted */
+.pm-label {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* Section / menu header label */
+.pm-eyebrow {
+  font-family: var(--font-serif);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* Tiny keyboard-hint chip (the one place a sans-serif appears) */
+.pm-key {
+  font-family: var(--font-system);
+  font-size: var(--text-2xs);
+  color: var(--fg-muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+  background: var(--fill-ghost);
+}
